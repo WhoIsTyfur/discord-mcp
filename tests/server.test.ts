@@ -45,6 +45,9 @@ describe("MCP server surface", () => {
         "create_channel",
         "set_channel_permissions",
         "reorder_channels",
+        "rename_channel",
+        "list_messages",
+        "publish_resource",
         "reorder_roles",
         "delete_channel",
         "delete_role",
@@ -71,6 +74,20 @@ describe("MCP server surface", () => {
     };
     expect(body.guild_count).toBe(1);
     expect(body.can_create_guilds).toBe(true);
+  });
+
+  it("renames an existing category without changing its identity or permissions and supports dry runs", async () => {
+    const { mcp, api } = await setup();
+    const category = await api.createChannel(api.guildId, { name: "10 · COMMUNITY", type: 4, position: 1, permission_overwrites: [] }, "test");
+    const writes = api.writes;
+    const original = structuredClone(category);
+    const args = { channel_id: category.id, name: "COMMUNITY" };
+    await mcp.callTool({ name: "rename_channel", arguments: { ...args, dry_run: true } });
+    expect(api.writes).toBe(writes);
+    expect(api.channels.find(c => c.id === category.id)).toEqual(original);
+    const result = await mcp.callTool({ name: "rename_channel", arguments: args });
+    expect(isError(result)).toBe(false);
+    expect(api.channels.find(c => c.id === category.id)).toEqual({ ...original, name: "COMMUNITY" });
   });
 
   it("delete tools refuse to act without confirm=true", async () => {

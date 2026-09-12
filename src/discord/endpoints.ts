@@ -18,6 +18,14 @@ export interface CreateRolePayload {
   mentionable?: boolean;
 }
 
+export interface CommunityMessage {
+  id: string;
+  channel_id: string;
+  content: string;
+  author: { id: string };
+  pinned: boolean;
+}
+
 export interface ModifyRolePayload {
   name?: string;
   permissions?: string;
@@ -110,6 +118,9 @@ export interface CreateGuildPayload {
  * in-memory fake implementing this interface.
  */
 export interface DiscordApi {
+  listMessages?(channelId: string, before?: string): Promise<CommunityMessage[]>;
+  createMessage?(channelId: string, content: string, nonce: string): Promise<CommunityMessage>;
+  pinMessage?(channelId: string, messageId: string): Promise<void>;
   getCurrentUser(): Promise<APIUser>;
   listCurrentUserGuilds(): Promise<APIPartialGuild[]>;
   getGuild(guildId: string): Promise<APIGuild>;
@@ -164,6 +175,18 @@ export interface DiscordApi {
 
 export class DiscordEndpoints implements DiscordApi {
   constructor(private readonly client: DiscordClient) {}
+
+  listMessages(channelId: string, before?: string): Promise<CommunityMessage[]> {
+    return this.client.request("GET", `/channels/${channelId}/messages`, { query: { limit: "100", ...(before ? { before } : {}) } });
+  }
+
+  createMessage(channelId: string, content: string, nonce: string): Promise<CommunityMessage> {
+    return this.client.request("POST", `/channels/${channelId}/messages`, { body: { content, nonce, enforce_nonce: true, allowed_mentions: { parse: [] }, flags: 4100 } });
+  }
+
+  pinMessage(channelId: string, messageId: string): Promise<void> {
+    return this.client.request("PUT", `/channels/${channelId}/messages/pins/${messageId}`, { reason: "discord-provisioner-mcp: pin community resource" });
+  }
 
   getCurrentUser(): Promise<APIUser> {
     return this.client.request<APIUser>("GET", "/users/@me");

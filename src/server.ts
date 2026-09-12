@@ -18,6 +18,8 @@ import { registerListChannels } from "./tools/list_channels.js";
 import { registerListGuilds } from "./tools/list_guilds.js";
 import { registerListRoles } from "./tools/list_roles.js";
 import { registerReorderChannels } from "./tools/reorder_channels.js";
+import { registerRenameChannel } from "./tools/rename_channel.js";
+import { registerCommunityMessages } from "./tools/community_messages.js";
 import { registerReorderRoles } from "./tools/reorder_roles.js";
 import { registerSetChannelPermissions } from "./tools/set_channel_permissions.js";
 import type { ToolContext } from "./tools/shared.js";
@@ -53,6 +55,8 @@ export function buildServer(opts: BuildServerOptions): McpServer {
   registerCreateChannel(server, ctx);
   registerSetChannelPermissions(server, ctx);
   registerReorderChannels(server, ctx);
+  registerRenameChannel(server, ctx);
+  registerCommunityMessages(server, ctx);
   registerReorderRoles(server, ctx);
   // Destructive - gated
   registerDeleteChannel(server, ctx);
