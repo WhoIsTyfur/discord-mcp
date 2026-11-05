@@ -92,6 +92,11 @@ or during development:
 npm run dev
 ```
 
+The stdio server belongs to the process that started it. It exits 0 when
+stdin ends or closes, on SIGHUP, SIGTERM or SIGINT, and when the parent
+process disappears (checked every 15 seconds), so an ended session never
+leaves a node process behind.
+
 ### Streamable HTTP
 
 ```bash

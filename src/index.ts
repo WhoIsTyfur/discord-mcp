@@ -15,6 +15,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { DiscordClient } from "./discord/client.js";
 import { DiscordEndpoints } from "./discord/endpoints.js";
+import { createLifecycle } from "./lifecycle.js";
 import { configureLogging, log } from "./logging.js";
 import { buildServer, SERVER_NAME, SERVER_VERSION } from "./server.js";
 
@@ -131,6 +132,9 @@ async function main(): Promise<void> {
     const transport = new StdioServerTransport();
     await server.connect(transport);
     log.info("listening on stdio", { server: SERVER_NAME, version: SERVER_VERSION });
+    // The client owns this process for the length of one session. Exit when
+    // that session ends instead of outliving it.
+    createLifecycle({ server, transport });
     return;
   }
 
@@ -305,6 +309,7 @@ async function runHttp(
     setTimeout(() => process.exit(0), 3000).unref();
   };
   process.on("SIGINT", shutdown);
+  process.on("SIGHUP", shutdown);
   process.on("SIGTERM", shutdown);
 }
 
